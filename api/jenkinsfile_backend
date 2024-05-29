@@ -1,14 +1,14 @@
 Jenkins file 
 pipeline {
     agent{
-       label 'jenkins-slave'
+       label 'khallusaws996'
     }
 
     environment {
 
-    DOCKERHUB_CREDENTIALS = credentials('khalandarbasha996')
+    DOCKERHUB_CREDENTIALS = credentials('khalluaws996')
      registry = "khalandarbasha996/lms-be"
-        registryCredential = 'khalandarbasha996'
+        registryCredential = 'khalluaws996'
        
     }
 
