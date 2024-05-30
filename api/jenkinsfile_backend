@@ -1,6 +1,7 @@
 Jenkins file 
 pipeline {
-    agent any
+    agent{ 
+       label 'qa'
     }
 
     environment {
