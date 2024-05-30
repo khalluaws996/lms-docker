@@ -1,7 +1,7 @@
 Jenkins file 
 pipeline {
     agent{
-       label 'dockerhub'
+       label 'jenkins-slave'
     }
 
     environment {
