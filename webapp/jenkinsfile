@@ -1,12 +1,18 @@
 pipeline {
-  agent any
+    agent any
 
-  stages {
-      stage('sonar analysis')
-          steps {
-              echo 'CODE QUALITY CHECK'
-              sh ''cd webapp && sudo docker run --rm -e SONAR_HOST_URL="http://18.206.207.0:9000" -v ".:/usr/src" -e SONAR_TOKEN="sqp_6e3afa8a58b1761d40a0e841e1c62ade05813cc8" sonarsource/sonar-scanner-cli -Dsonar.projectKey=lms'
-                echo 'CODE QUALITY COMPLETED'   
+    stages {
+        stage('sonar analysis')
+            steps {
+                echo 'CODE QUALITY CHECK'
+                sh '''
+                    cd webapp  
+                    sudo docker run --rm -e SONAR_HOST_URL="http://18.206.207.0:9000" -v ".:/usr/src" -e SONAR_TOKEN="sqp_6e3afa8a58b1761d40a0e841e1c62ade05813cc8" sonarsource/sonar-scanner-cli -Dsonar.projectKey=lms'
+                '''                  
+               echo 'CODE QUALITY COMPLETED'   
             }
+         }
+    }
+}
                   
 
