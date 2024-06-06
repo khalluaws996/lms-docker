@@ -9,17 +9,23 @@ pipeline {
             }
         }
 
-        stage('Publish Artifacts') {  // Added stage name
+        stage('Publish Artifacts') {
             steps {
                 script {
-                    echo "publish artifacts"       
+                    echo "Publishing artifacts"       
                     def packageJSON = readJSON file: 'webapp/package.json'
                     def packageJSONVersion = packageJSON.version 
-                    sh "zip webapp/dist/*-${packageJSONVersion}.zip -r webapp/dist"
-                    sh "curl -v -u admin:admin123 --upload-file webapp/dist/*-${packageJSONVersion}.zip http://54.237.77.36:8081/repository/lms/"
+                    
+                    // Ensure the zip command exists
+                    sh 'which zip || { echo "zip command not found"; exit 127; }'
+                    
+                    // Ensure the webapp/dist directory exists
+                    sh '[ -d "webapp/dist" ] || { echo "Directory webapp/dist not found"; exit 127; }'
+                    
+                    sh "zip -r webapp/dist-${packageJSONVersion}.zip webapp/dist/*"
+                    sh "curl -v -u admin:admin123 --upload-file webapp/dist-${packageJSONVersion}.zip http://54.237.77.36:8081/repository/lms/"
                 }
             }
         }
     }
 }
-
