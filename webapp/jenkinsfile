@@ -31,22 +31,24 @@ pipeline {
 
         stage('Publish Artifacts') {
             steps {
-                // Read the version from package.json
-                def packageJSON = readJSON file: 'webapp/package.json'
-                def packageJSONVersion = packageJSON.version 
-                
-                echo "Publishing artifacts for version ${packageJSONVersion}"
-                
-                // Debugging steps to check the contents and availability of commands
-                sh 'ls -l webapp/dist' 
-                sh 'which zip' 
-                
-                // Create a zip file of the dist directory
-                def zipFileName = "webapp/dist-${packageJSONVersion}.zip"
-                sh "zip -r ${zipFileName} webapp/dist/*"
-                
-                // Upload the zip file to the repository
-                sh "curl -v -u admin:admin123 --upload-file ${zipFileName} http://34.229.68.251:8081/repository/lms/"
+                script {
+                    echo "Publishing artifacts"
+                    
+                    // Read the version from package.json
+                    def packageJSON = readJSON file: 'webapp/package.json'
+                    def packageJSONVersion = packageJSON.version 
+                    
+                    // Debugging steps to check the contents and availability of commands
+                    sh 'ls -l webapp/dist' 
+                    sh 'which zip' 
+                    
+                    // Create a zip file of the dist directory
+                    def zipFileName = "webapp/dist-${packageJSONVersion}.zip"
+                    sh "zip -r ${zipFileName} webapp/dist/*"
+                    
+                    // Upload the zip file to the repository
+                    sh "curl -v -u admin:admin123 --upload-file ${zipFileName} http://54.159.27.82:8081/repository/lms/"
+                }
             }
         }
     }
