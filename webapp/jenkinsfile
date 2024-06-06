@@ -16,13 +16,10 @@ pipeline {
                     def packageJSON = readJSON file: 'webapp/package.json'
                     def packageJSONVersion = packageJSON.version 
                     
-                    // Ensure the zip command exists
-                    sh 'which zip || { echo "zip command not found"; exit 127; }'
+                    sh 'ls -l webapp/dist' // Debugging: List contents of dist directory
                     
-                    // Ensure the webapp/dist directory exists
-                    sh '[ -d "webapp/dist" ] || { echo "Directory webapp/dist not found"; exit 127; }'
-                    
-                    sh "zip -r webapp/dist-${packageJSONVersion}.zip webapp/dist/*"
+                    sh 'which zip' // Debugging: Check availability of zip command
+                    sh 'zip -r webapp/dist-${packageJSONVersion}.zip webapp/dist/*'
                     sh "curl -v -u admin:admin123 --upload-file webapp/dist-${packageJSONVersion}.zip http://54.237.77.36:8081/repository/lms/"
                 }
             }
