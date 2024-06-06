@@ -24,10 +24,9 @@ pipeline {
                     
                     sh 'which zip' // Debugging: Check availability of zip command
                     sh "zip -r webapp/dist-${packageJSONVersion}.zip webapp/dist/*"
-                    sh "curl -v -u admin:admin123 --upload-file webapp/dist-${packageJSONVersion}.zip http://54.237.77.36:8081/repository/lms/"
+                    sh "curl -v -u admin:admin123 --upload-file webapp/dist-${packageJSONVersion}.zip http://54.159.27.82:8081/repository/lms/"
                 }
             }
         }
     }
 }
-
