@@ -50,14 +50,15 @@ pipeline {
                     echo "Zip file name: ${zipFileName}"
                     
                     // Upload the zip file to the repository
-                    def curlCommand = "curl -v -u admin:admin123 --upload-file ${zipFileName} http://http://54.145.229.165/:8081/repository/lms/"
+                    def repositoryURL = "http://54.145.229.165:8081/repository/lms/"
+                    def curlCommand = "curl -v -u admin:admin123 --upload-file ${zipFileName} ${repositoryURL}"
                     
                     // Debugging step to print the full curl command
                     echo "Executing command: ${curlCommand}"
                     
                     // Retry mechanism
                     def maxRetries = 6
-                    def retryCount = 2
+                    def retryCount = 0
                     def success = false
 
                     while (retryCount < maxRetries && !success) {
