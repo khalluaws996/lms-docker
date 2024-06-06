@@ -67,7 +67,7 @@ pipeline {
                         } catch (Exception e) {
                             echo "Upload attempt ${retryCount + 1} failed. Retrying..."
                             retryCount++
-                            sleep(time: 10, unit: 'HOURS') // Wait before retrying
+                            sleep(time: 10, unit: 'SECONDS') // Wait before retrying
                         }
                     }
 
