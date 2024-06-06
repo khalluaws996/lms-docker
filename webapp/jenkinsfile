@@ -1,4 +1,3 @@
-
 import groovy.json.JsonSlurper
 
 pipeline {
@@ -48,8 +47,7 @@ pipeline {
                     
                     // Read the version from package.json
                     def packageJSONText = readFile 'webapp/package.json'
-                    def packageJSON = new JsonSlurper().parseText(packageJSONText)
-                    def packageJSONVersion = packageJSON.version 
+                    def packageJSONVersion = new JsonSlurper().parseText(packageJSONText).version 
                     
                     // Debugging steps to check the contents and availability of commands
                     sh 'ls -l webapp/dist' 
