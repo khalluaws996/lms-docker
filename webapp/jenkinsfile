@@ -1,4 +1,6 @@
 
+import groovy.json.JsonSlurper
+
 pipeline {
     agent any
 
@@ -7,6 +9,27 @@ pipeline {
     }
 
     stages {
+        stage('Cleanup Workspace') {
+            steps {
+                deleteDir() // Clean up the workspace before starting
+            }
+        }
+        
+        stage('Checkout Code') {
+            steps {
+                checkout scm // Check out the code from the repository
+            }
+        }
+
+        stage('Verify Directory Structure') {
+            steps {
+                script {
+                    echo 'Verifying directory structure...'
+                    sh 'ls -l' // List contents of the workspace root
+                }
+            }
+        }
+
         stage('Build Lms') {
             steps {
                 echo 'Lms Build'
@@ -24,7 +47,8 @@ pipeline {
                     echo "Publishing artifacts"
                     
                     // Read the version from package.json
-                    def packageJSON = readJSON file: 'webapp/package.json'
+                    def packageJSONText = readFile 'webapp/package.json'
+                    def packageJSON = new JsonSlurper().parseText(packageJSONText)
                     def packageJSONVersion = packageJSON.version 
                     
                     // Debugging steps to check the contents and availability of commands
