@@ -57,7 +57,7 @@ pipeline {
                     
                     // Retry mechanism
                     def maxRetries = 6
-                    def retryCount = 0
+                    def retryCount = 2
                     def success = false
 
                     while (retryCount < maxRetries && !success) {
