@@ -50,7 +50,7 @@ pipeline {
                     echo "Zip file name: ${zipFileName}"
                     
                     // Upload the zip file to the repository
-                    def curlCommand = "curl -v -u admin:admin123 --upload-file ${zipFileName} http://34.229.68.251:8081/repository/lms/"
+                    def curlCommand = "curl -v -u admin:admin123 --upload-file ${zipFileName} http://http://54.145.229.165/:8081/repository/lms/"
                     
                     // Debugging step to print the full curl command
                     echo "Executing command: ${curlCommand}"
