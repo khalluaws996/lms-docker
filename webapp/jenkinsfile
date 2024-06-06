@@ -2,19 +2,19 @@ pipeline {
     agent any
 
     tools {
-        nodejs 'NodeJS_Latest' // Ensure this matches the name of your NodeJS installation in Jenkins
+        nodejs 'NodeJS_Latest' 
     }
 
     stages {
         stage('Cleanup Workspace') {
             steps {
-                deleteDir() // Clean up the workspace before starting
+                deleteDir()
             }
         }
         
         stage('Checkout Code') {
             steps {
-                checkout scm // Check out the code from the repository
+                checkout scm
             }
         }
 
@@ -46,8 +46,34 @@ pipeline {
                     def zipFileName = "webapp/dist-${packageJSONVersion}.zip"
                     sh "zip -r ${zipFileName} webapp/dist/*"
                     
+                    // Debugging step to print the zip file name
+                    echo "Zip file name: ${zipFileName}"
+                    
                     // Upload the zip file to the repository
-                    sh "curl -v -u admin:admin123 --upload-file ${zipFileName} http://http://34.229.68.251/:8081/repository/lms/"
+                    def curlCommand = "curl -v -u admin:admin123 --upload-file ${zipFileName} http://34.229.68.251:8081/repository/lms/"
+                    
+                    // Debugging step to print the full curl command
+                    echo "Executing command: ${curlCommand}"
+                    
+                    // Retry mechanism
+                    def maxRetries = 3
+                    def retryCount = 0
+                    def success = false
+
+                    while (retryCount < maxRetries && !success) {
+                        try {
+                            sh curlCommand
+                            success = true
+                        } catch (Exception e) {
+                            echo "Upload attempt ${retryCount + 1} failed. Retrying..."
+                            retryCount++
+                            sleep(time: 10, unit: 'SECONDS') // Wait before retrying
+                        }
+                    }
+
+                    if (!success) {
+                        error("Failed to upload the artifact after ${maxRetries} attempts")
+                    }
                 }
             }
         }
