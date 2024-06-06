@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    tools {
+        nodejs 'NodeJS' // This should match the name of your NodeJS installation in Jenkins
+    }
+
     stages {
         stage('Build Lms') {
             steps {
@@ -19,7 +23,7 @@ pipeline {
                     sh 'ls -l webapp/dist' // Debugging: List contents of dist directory
                     
                     sh 'which zip' // Debugging: Check availability of zip command
-                    sh 'zip -r webapp/dist-${packageJSONVersion}.zip webapp/dist/*'
+                    sh "zip -r webapp/dist-${packageJSONVersion}.zip webapp/dist/*"
                     sh "curl -v -u admin:admin123 --upload-file webapp/dist-${packageJSONVersion}.zip http://54.237.77.36:8081/repository/lms/"
                 }
             }
