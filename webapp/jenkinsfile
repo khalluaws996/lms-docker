@@ -7,12 +7,19 @@ pipeline {
                 echo 'Lms Build'
                 sh 'cd webapp && npm install && npm run build'
             }
-   }
-   stage {
-       steps {
-           script {
-               echo "publish artifacts"       
-                def packageJSON = readJSON file: 'webapp/package.json'
-                def packageJSONVersion = packageJSON.version 
-                sh "zip webapp/dist/*-${packageJsonVersion}.zip -r webapp/dist"
-                sh "curl -v -u admin:admin123 --upload-file webapp/dist/*-${packageJsonVersion}.zip http://54.237.77.36:8081/repository/lms/"
+        }
+
+        stage('Publish Artifacts') {  // Added stage name
+            steps {
+                script {
+                    echo "publish artifacts"       
+                    def packageJSON = readJSON file: 'webapp/package.json'
+                    def packageJSONVersion = packageJSON.version 
+                    sh "zip webapp/dist/*-${packageJSONVersion}.zip -r webapp/dist"
+                    sh "curl -v -u admin:admin123 --upload-file webapp/dist/*-${packageJSONVersion}.zip http://54.237.77.36:8081/repository/lms/"
+                }
+            }
+        }
+    }
+}
+
