@@ -2,28 +2,38 @@ pipeline {
     agent any
 
     tools {
-        nodejs 'NodeJS' // This should match the name of your NodeJS installation in Jenkins
+        nodejs 'NodeJS' // Ensure this matches the name of your NodeJS installation in Jenkins
     }
 
     stages {
         stage('Build Lms') {
             steps {
                 echo 'Lms Build'
-                sh 'cd webapp && npm install && npm run build'
+                sh '''
+                   cd webapp
+                   npm install
+                   npm run build
+                '''
             }
         }
 
         stage('Publish Artifacts') {
             steps {
                 script {
-                    echo "Publishing artifacts"       
+                    echo "Publishing artifacts"
+                    
+                    // Read the version from package.json
                     def packageJSON = readJSON file: 'webapp/package.json'
                     def packageJSONVersion = packageJSON.version 
                     
-                    sh 'ls -l webapp/dist' // Debugging: List contents of dist directory
+                    // Debugging steps to check the contents and availability of commands
+                    sh 'ls -l webapp/dist' 
+                    sh 'which zip' 
                     
-                    sh 'which zip' // Debugging: Check availability of zip command
+                    // Create a zip file of the dist directory
                     sh "zip -r webapp/dist-${packageJSONVersion}.zip webapp/dist/*"
+                    
+                    // Upload the zip file to the repository
                     sh "curl -v -u admin:admin123 --upload-file webapp/dist-${packageJSONVersion}.zip http://54.159.27.82:8081/repository/lms/"
                 }
             }
