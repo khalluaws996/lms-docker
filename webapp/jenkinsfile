@@ -4,6 +4,11 @@ pipeline {
     tools {
         nodejs 'NodeJS_Latest'
     }
+    
+    environment {
+        repositoryURL = "http://54.172.190.173:8081/repository/lms/"
+        downloadDirectory = "/tmp" // Specify a different directory for artifact download
+    }
 
     stages {
         stage('Cleanup Workspace') {
@@ -43,7 +48,6 @@ pipeline {
                     sh "zip -r ${zipFileName} webapp/dist/*"
                     
                     // Upload the zip file to the repository
-                    def repositoryURL = "http://54.172.190.173:8081/repository/lms/"
                     def curlCommand = "curl -v -u admin:admin123 --upload-file ${zipFileName} ${repositoryURL}${zipFileName}"
                     
                     // Retry mechanism
@@ -68,13 +72,7 @@ pipeline {
                 }
             }
         }
-        
-         environment {
-        repositoryURL = "http://54.172.190.173:8081/repository/lms/"
-        downloadDirectory = "/tmp" // Specify a different directory for artifact download
-    }
 
-    stages {
         stage('Download Artifact') {
             steps {
                 echo "Downloading artifact..."
@@ -84,16 +82,13 @@ pipeline {
                 sh "curl -o ${downloadDirectory}/artifact.zip ${repositoryURL}/artifact.zip"
             }
         }
-        
-        // Other stages...
-    }
-}
 
         stage('Deploy Artifact') {
             steps {
                 echo "Deploying artifact..."
-                sh "unzip /home/ubuntu/tmp/dist.zip -d /home/ubuntu/tmp"
+                sh "unzip ${downloadDirectory}/artifact.zip -d ${downloadDirectory}"
             }
         }
     }
 }
+
