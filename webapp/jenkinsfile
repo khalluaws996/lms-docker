@@ -2,36 +2,15 @@ pipeline {
     agent any
 
     environment {
-        repositoryURL = "YOUR_REPOSITORY_URL_HERE"
-        downloadDirectory = "/tmp"
-        deploymentLocation = "/home/ubuntu/lms-docker"
-        artifactFileName = "your-artifact-file.zip"
-        credentialsId = 'repo-credentials'
+        repositoryURL = "http://http://54.172.190.173:8081"
+        downloadDirectory = "/tmp" // Specify a different directory for artifact download
+        deploymentLocation = "/home/ubuntu/lms" // Specify the deployment location
+        artifactFileName = "your-artifact-file.zip" // Specify the name of the artifact file
+        credentialsId = 'repo-credentials' // Specify the ID of the Jenkins credentials containing the username and password
     }
 
     stages {
-        stage('Cleanup Workspace') {
-            steps {
-                deleteDir()
-            }
-        }
-        
-        stage('Checkout Code') {
-            steps {
-                checkout scm
-            }
-        }
-
-        stage('Build LMS') {
-            steps {
-                echo 'Building LMS...'
-                sh '''
-                   cd webapp
-                   npm install
-                   npm run build
-                '''
-            }
-        }
+        // Previous stages...
 
         stage('Publish Artifacts') {
             steps {
@@ -49,8 +28,8 @@ pipeline {
                     // Upload the zip file to the repository
                     def curlCommand = "curl -v -u admin:admin123 --upload-file ${zipFileName} ${repositoryURL}${zipFileName}"
                     
-                    // Retry mechanism
-                    def maxRetries = 6
+                    // Retry mechanism with increased sleep time and debugging output
+                    def maxRetries = 10
                     def retryCount = 0
                     def success = false
 
@@ -62,7 +41,7 @@ pipeline {
                             echo "Upload attempt ${retryCount + 1} failed. Retrying..."
                             echo "Error: ${e}"
                             retryCount++
-                            sleep(time: 10, unit: 'SECONDS') // Wait before retrying
+                            sleep(time: 30, unit: 'SECONDS') // Longer sleep time
                         }
                     }
 
@@ -73,29 +52,8 @@ pipeline {
             }
         }
 
-        stage('Download Artifact') {
-            steps {
-                echo 'Downloading artifact...'
-                withCredentials([usernamePassword(credentialsId: 'repo-credentials', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                    sh "wget --user=${USERNAME} --password=${PASSWORD} -O ${downloadDirectory}/${artifactFileName} ${repositoryURL}/${artifactFileName}"
-                }
-            }
-        }
-        
-        stage('Deploy LMS') {
-            steps {
-                echo 'Deploying LMS...'
-                sh "ls -l ${downloadDirectory}/${artifactFileName}" // Verify artifact existence
-                sh "unzip -o ${downloadDirectory}/${artifactFileName} -d ${deploymentLocation}"
-                sh "${deploymentLocation}/start.sh" // Assuming start.sh script exists for starting the LMS
-            }
-        }
+        // Remaining stages...
     }
     
-    post {
-        always {
-            // Clean up any temporary files or resources if needed
-            cleanWs()
-        }
-    }
+    // Post actions...
 }
