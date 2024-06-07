@@ -1,4 +1,3 @@
-
 pipeline {
     agent any
 
@@ -98,11 +97,17 @@ pipeline {
                 echo 'Deploying LMS...'
                 script {
                     try {
+                        // Add debug information to check file existence and permissions
+                        sh "ls -l ${downloadDirectory}/dist-${env.PACKAGE_VERSION}.zip"
+                        sh "unzip -l ${downloadDirectory}/dist-${env.PACKAGE_VERSION}.zip"
+                        
+                        // Unzip the artifact and start the LMS application
                         sh "unzip ${downloadDirectory}/dist-${env.PACKAGE_VERSION}.zip -d ${deploymentLocation}"
+                        sh "chmod +x ${deploymentLocation}/start.sh"
                         sh "${deploymentLocation}/start.sh"
                     } catch (Exception e) {
                         echo "Deployment failed: ${e.getMessage()}"
-                        currentBuild.result = 'FAILURE'
+                        error("Deployment failed: ${e.getMessage()}")
                     }
                 }
             }
