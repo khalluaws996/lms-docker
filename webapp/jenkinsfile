@@ -2,11 +2,11 @@ pipeline {
     agent any
 
     environment {
-        repositoryURL = "http://54.172.190.173:8081/repository/lms/"
-        downloadDirectory = "/tmp" // Specify a different directory for artifact download
-        deploymentLocation = "/home/ubuntu/lms" // Specify the deployment location
-        artifactFileName = "your-artifact-file.zip" // Specify the name of the artifact file
-        credentialsId = 'repo-credentials' // Specify the ID of the Jenkins credentials containing the username and password
+        repositoryURL = "YOUR_REPOSITORY_URL_HERE"
+        downloadDirectory = "/tmp"
+        deploymentLocation = "/home/ubuntu/lms-docker"
+        artifactFileName = "your-artifact-file.zip"
+        credentialsId = 'repo-credentials'
     }
 
     stages {
@@ -83,11 +83,6 @@ pipeline {
         }
         
         stage('Deploy LMS') {
-            when {
-                expression {
-                    currentBuild.result != 'FAILURE' // Run only if there are no failures in earlier stages
-                }
-            }
             steps {
                 echo 'Deploying LMS...'
                 sh "ls -l ${downloadDirectory}/${artifactFileName}" // Verify artifact existence
