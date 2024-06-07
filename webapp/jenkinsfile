@@ -4,9 +4,9 @@ pipeline {
     environment {
         repositoryURL = "http://54.172.190.173:8081/repository/lms/"
         downloadDirectory = "/tmp" // Specify a different directory for artifact download
-        deploymentLocation = "/home/ubuntu/lms" // Specify the deployment location
-        artifactFileName = "artifact.zip"
-        artifactURL = "${repositoryURL}${artifactFileName}"
+        deploymentLocation = "/home/ubuntu/lms-docker" // Specify the deployment location
+        username = "admin"
+        password = "admin123"
     }
 
     stages {
@@ -43,11 +43,11 @@ pipeline {
                     def packageJSONVersion = packageJSON.version 
                     
                     // Create a zip file of the dist directory
-                    def zipFileName = "dist-${packageJSONVersion}.zip"
+                    def zipFileName = "webapp/dist-${packageJSONVersion}.zip"
                     sh "zip -r ${zipFileName} webapp/dist/*"
                     
                     // Upload the zip file to the repository
-                    def curlCommand = "curl -v -u admin:admin123 --upload-file ${zipFileName} ${repositoryURL}${zipFileName}"
+                    def curlCommand = "curl -v -u ${username}:${password} --upload-file ${zipFileName} ${repositoryURL}${zipFileName}"
                     
                     // Retry mechanism
                     def maxRetries = 6
@@ -76,30 +76,20 @@ pipeline {
         stage('Download Artifact') {
             steps {
                 echo 'Downloading artifact...'
-                // Download the artifact and handle errors
-                catchError(buildResult: 'UNSTABLE') {
-                    sh "wget ${artifactURL} -O ${downloadDirectory}/${artifactFileName}"
-                }
+                // Replace http://http://54.172.190.173:8081 with the actual URL or IP address where your artifact is located
+                sh 'wget http://54.172.190.173:8081/dist-0.0.0.zip -P /tmp'
             }
         }
-
+        
         stage('Deploy LMS') {
             steps {
                 echo 'Deploying LMS...'
-                // Check if the artifact file exists before extracting
-                script {
-                    def artifactFilePath = "${downloadDirectory}/${artifactFileName}"
-                    if (fileExists(artifactFilePath)) {
-                        sh "unzip ${artifactFilePath} -d ${deploymentLocation}"
-                        sh "${deploymentLocation}/start.sh"
-                    } else {
-                        error("Artifact file '${artifactFilePath}' not found.")
-                    }
-                }
+                // Replace the deployment steps with the actual commands needed to deploy your LMS
+                sh 'unzip /tmp/dist-0.0.0.zip -d /opt/lms'
+                sh '/opt/lms/start.sh'
             }
         }
     }
-    
     post {
         always {
             // Clean up any temporary files or resources if needed
