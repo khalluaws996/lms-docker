@@ -79,7 +79,7 @@ pipeline {
                 
                 // Download the artifact
                 sh "mkdir -p ${downloadDirectory}" // Create the download directory if it doesn't exist
-                sh "curl -o ${downloadDirectory}/artifact.zip ${repositoryURL}/artifact.zip"
+                sh "curl -o ${downloadDirectory}/tmp/dist-0.0.0.zip ${repositoryURL}/tmp/dist-0.0.0.zip"
             }
         }
         
@@ -88,7 +88,7 @@ pipeline {
                 echo "Deploying LMS..."
                 // Add your deployment commands here
                 // For example, if you need to unzip the downloaded artifact:
-                sh "unzip ${downloadDirectory}/artifact.zip -d /path/to/deployment/location"
+                sh "unzip ${downloadDirectory}/tmp/dist-0.0.0.zip -d /path/to/deployment/location"
             }
         }
     }
