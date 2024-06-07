@@ -5,14 +5,30 @@ pipeline {
         nodejs 'NodeJS_Latest'
     }
 
-    environment {
-        repositoryURL = "http://54.172.190.173:8081/repository/lms/"
-        artifactDestination = "/tmp/dist-${packageJSONVersion}.zip"
-    }
-
     stages {
-        // Previous stages...
+        stage('Cleanup Workspace') {
+            steps {
+                deleteDir()
+            }
+        }
         
+        stage('Checkout Code') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build LMS') {
+            steps {
+                echo 'Building LMS...'
+                sh '''
+                   cd webapp
+                   npm install
+                   npm run build
+                '''
+            }
+        }
+
         stage('Publish Artifacts') {
             steps {
                 script {
@@ -24,12 +40,10 @@ pipeline {
                     
                     // Create a zip file of the dist directory
                     def zipFileName = "webapp/dist-${packageJSONVersion}.zip"
-                    sh "cd webapp/dist && zip -r ../../${zipFileName} *"
-                    
-                    // Assign the artifact destination
-                    env.artifactDestination = "/tmp/${zipFileName}"
+                    sh "zip -r ${zipFileName} webapp/dist/*"
                     
                     // Upload the zip file to the repository
+                    def repositoryURL = "http://54.172.190.173:8081/repository/lms/"
                     def curlCommand = "curl -v -u admin:admin123 --upload-file ${zipFileName} ${repositoryURL}${zipFileName}"
                     
                     // Retry mechanism
@@ -55,16 +69,18 @@ pipeline {
             }
         }
         
+        stage('Download Artifact') {
+            steps {
+                echo "Downloading artifact..."
+                sh "mkdir -p /home/ubuntu/tmp"
+                sh "curl -v -u admin:admin123 -o /home/ubuntu/tmp/dist.zip http://54.172.190.173:8081/repository/lms/webapp/dist-${packageJSONVersion}.zip"
+            }
+        }
+
         stage('Deploy Artifact') {
             steps {
-                script {
-                    echo "Deploying artifact..."
-                    
-                    // Assuming deployment tool is Ansible
-                    sh "ansible-playbook deploy.yml --extra-vars 'artifact_path=${env.artifactDestination}'"
-                    
-                    echo "Artifact deployed successfully."
-                }
+                echo "Deploying artifact..."
+                sh "unzip /home/ubuntu/tmp/dist.zip -d /home/ubuntu/tmp"
             }
         }
     }
