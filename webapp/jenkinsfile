@@ -44,10 +44,10 @@ pipeline {
                     
                     // Create a zip file of the dist directory
                     def zipFileName = "webapp/dist-${packageJSONVersion}.zip"
-                    sh "zip -r ${zipFileName} webapp/dist/*"
+                    sh "zip -r ${dist-0.0.0.zip} webapp/dist/*"
                     
                     // Upload the zip file to the repository
-                    def curlCommand = "curl -v -u ${username}:${password} --upload-file ${zipFileName} ${repositoryURL}${zipFileName}"
+                    def curlCommand = "curl -v -u ${admin}:${admin123} --upload-file ${dist-0.0.0.zip} ${http://http://54.172.190.173:8081/}${dist-0.0.0.zip}"
                     
                     // Retry mechanism
                     def maxRetries = 6
