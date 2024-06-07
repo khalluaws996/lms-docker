@@ -79,14 +79,14 @@ pipeline {
                 
                 // Download the artifact
                 sh "mkdir -p ${downloadDirectory}" // Create the download directory if it doesn't exist
-                sh "curl -o ${downloadDirectory}/artifact.zip ${repositoryURL}/artifact.zip"
+                sh "curl -o ${downloadDirectory}/dist-0.0.0.zip ${repositoryURL}/artifact.zip"
             }
         }
 
         stage('Deploy Artifact') {
             steps {
                 echo "Deploying artifact..."
-                sh "unzip ${downloadDirectory}/artifact.zip -d ${downloadDirectory}"
+                sh "unzip ${downloadDirectory}/dist-0.0.0.zip -d ${downloadDirectory}"
             }
         }
     }
