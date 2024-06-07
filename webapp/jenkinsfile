@@ -3,8 +3,8 @@ pipeline {
 
     environment {
         repositoryURL = "http://54.172.190.173:8081/repository/lms/"
-        downloadDirectory = "/tmp" // Specify a different directory for artifact download if needed
-        deploymentLocation = "/opt/lms" // Specify the deployment location
+        downloadDirectory = "/tmp" // Specify a different directory for artifact download
+        deploymentLocation = "/home/ubuntu/lms" // Specify the deployment location
     }
 
     stages {
@@ -23,10 +23,11 @@ pipeline {
         stage('Build LMS') {
             steps {
                 echo 'Building LMS...'
-                dir('webapp') {
-                    sh 'npm install'
-                    sh 'npm run build'
-                }
+                sh '''
+                   cd webapp
+                   npm install
+                   npm run build
+                '''
             }
         }
 
@@ -34,14 +35,19 @@ pipeline {
             steps {
                 script {
                     echo "Publishing artifacts"
+                    
+                    // Read the version from package.json
                     def packageJSON = readJSON file: 'webapp/package.json'
                     def packageJSONVersion = packageJSON.version 
                     
+                    // Create a zip file of the dist directory
                     def zipFileName = "webapp/dist-${packageJSONVersion}.zip"
                     sh "zip -r ${zipFileName} webapp/dist/*"
                     
+                    // Upload the zip file to the repository
                     def curlCommand = "curl -v -u admin:admin123 --upload-file ${zipFileName} ${repositoryURL}${zipFileName}"
                     
+                    // Retry mechanism
                     def maxRetries = 6
                     def retryCount = 0
                     def success = false
@@ -77,12 +83,21 @@ pipeline {
                 echo 'Deploying LMS...'
                 script {
                     try {
-                        sh 'unzip /tmp/artifact.zip -d /opt/lms'
-                        sh '/opt/lms/start.sh'
-                   } catch (Exception e) {
-                       echo "Deployment failed: ${e}"
-                       currentBuild.result = 'FAILURE'
-                   }
-               }
-           }
-       }
+                        sh "unzip ${downloadDirectory}/artifact.zip -d ${deploymentLocation}"
+                        sh "${deploymentLocation}/start.sh"
+                    } catch (Exception e) {
+                        echo "Deployment failed: ${e}"
+                        currentBuild.result = 'FAILURE'
+                    }
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            // Clean up any temporary files or resources if needed
+            cleanWs()
+        }
+    }
+}
