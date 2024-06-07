@@ -48,27 +48,29 @@ pipeline {
                     sh "cd webapp && zip -r ${zipFileName} dist/*"
                     
                     // Upload the zip file to the repository
-                    def curlCommand = "curl -v -u admin:admin123 --upload-file webapp/${zipFileName} ${repositoryURL}${zipFileName}"
-                    
-                    // Retry mechanism
-                    def maxRetries = 6
-                    def retryCount = 0
-                    def success = false
+                    withCredentials([usernamePassword(credentialsId: 'repo-credentials', passwordVariable: 'REPO_PASSWORD', usernameVariable: 'REPO_USERNAME')]) {
+                        def curlCommand = "curl -v -u ${REPO_USERNAME}:${REPO_PASSWORD} --upload-file webapp/${zipFileName} ${repositoryURL}${zipFileName}"
+                        
+                        // Retry mechanism
+                        def maxRetries = 6
+                        def retryCount = 0
+                        def success = false
 
-                    while (retryCount < maxRetries && !success) {
-                        try {
-                            sh curlCommand
-                            success = true
-                        } catch (Exception e) {
-                            echo "Upload attempt ${retryCount + 1} failed. Retrying..."
-                            echo "Error: ${e.getMessage()}"
-                            retryCount++
-                            sleep(time: 10, unit: 'SECONDS') // Wait before retrying
+                        while (retryCount < maxRetries && !success) {
+                            try {
+                                sh curlCommand
+                                success = true
+                            } catch (Exception e) {
+                                echo "Upload attempt ${retryCount + 1} failed. Retrying..."
+                                echo "Error: ${e.getMessage()}"
+                                retryCount++
+                                sleep(time: 10, unit: 'SECONDS') // Wait before retrying
+                            }
                         }
-                    }
 
-                    if (!success) {
-                        error("Failed to upload the artifact after ${maxRetries} attempts")
+                        if (!success) {
+                            error("Failed to upload the artifact after ${maxRetries} attempts")
+                        }
                     }
                 }
             }
@@ -78,11 +80,13 @@ pipeline {
             steps {
                 echo 'Downloading artifact...'
                 script {
-                    try {
-                        sh "wget ${repositoryURL}dist-${env.PACKAGE_VERSION}.zip -P ${downloadDirectory}"
-                    } catch (Exception e) {
-                        echo "Download failed: ${e.getMessage()}"
-                        error("Artifact download failed")
+                    withCredentials([usernamePassword(credentialsId: 'repo-credentials', passwordVariable: 'REPO_PASSWORD', usernameVariable: 'REPO_USERNAME')]) {
+                        try {
+                            sh "wget --user=${REPO_USERNAME} --password=${REPO_PASSWORD} ${repositoryURL}dist-${env.PACKAGE_VERSION}.zip -P ${downloadDirectory}"
+                        } catch (Exception e) {
+                            echo "Download failed: ${e.getMessage()}"
+                            error("Artifact download failed")
+                        }
                     }
                 }
             }
