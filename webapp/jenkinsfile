@@ -40,6 +40,9 @@ pipeline {
                     def packageJSON = readJSON file: 'webapp/package.json'
                     def packageJSONVersion = packageJSON.version 
                     
+                    // Set an environment variable with the version number
+                    env.PACKAGE_VERSION = packageJSONVersion
+                    
                     // Create a zip file of the dist directory
                     def zipFileName = "dist-${packageJSONVersion}.zip"
                     sh "cd webapp && zip -r ${zipFileName} dist/*"
@@ -76,7 +79,7 @@ pipeline {
                 echo 'Downloading artifact...'
                 script {
                     try {
-                        sh "wget ${repositoryURL}dist-${packageJSONVersion}.zip -P ${downloadDirectory}"
+                        sh "wget ${repositoryURL}dist-${env.PACKAGE_VERSION}.zip -P ${downloadDirectory}"
                     } catch (Exception e) {
                         echo "Download failed: ${e.getMessage()}"
                         error("Artifact download failed")
@@ -90,7 +93,7 @@ pipeline {
                 echo 'Deploying LMS...'
                 script {
                     try {
-                        sh "unzip ${downloadDirectory}/dist-${packageJSONVersion}.zip -d ${deploymentLocation}"
+                        sh "unzip ${downloadDirectory}/dist-${env.PACKAGE_VERSION}.zip -d ${deploymentLocation}"
                         sh "${deploymentLocation}/start.sh"
                     } catch (Exception e) {
                         echo "Deployment failed: ${e.getMessage()}"
