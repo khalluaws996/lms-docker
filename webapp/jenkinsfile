@@ -43,7 +43,7 @@ pipeline {
                     sh "zip -r ${zipFileName} webapp/dist/*"
                     
                     // Upload the zip file to the repository
-                    def repositoryURL = "http://54.172.190.173:8080/repository/lms/"
+                    def repositoryURL = "http://54.172.190.173:8081/repository/lms/"
                     def curlCommand = "curl -v -u admin:admin123 --upload-file ${zipFileName} ${repositoryURL}${zipFileName}"
                     
                     // Retry mechanism
