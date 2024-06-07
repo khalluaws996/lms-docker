@@ -76,7 +76,7 @@ pipeline {
         stage('Download Artifact') {
             steps {
                 echo 'Downloading artifact...'
-                withCredentials([usernamePassword(credentialsId: credentialsId, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                withCredentials([usernamePassword(credentialsId: 'repo-credentials' , usernameVariable: 'admin', passwordVariable: 'admin123')]) {
                     sh "wget --user=${USERNAME} --password=${PASSWORD} -O ${downloadDirectory}/${artifactFileName} ${repositoryURL}/${artifactFileName}"
                 }
             }
@@ -85,8 +85,8 @@ pipeline {
         stage('Deploy LMS') {
             steps {
                 echo 'Deploying LMS...'
-                sh "ls -l ${downloadDirectory}/${artifactFileName}" // Verify artifact existence
-                sh "unzip -o ${downloadDirectory}/${artifactFileName} -d ${deploymentLocation}"
+                sh "ls -l ${downloadDirectory}/${dist-0.0.0.zip}" // Verify artifact existence
+                sh "unzip -o ${downloadDirectory}/${dist-0.0.0.zip} -d ${deploymentLocation}"
                 sh "${deploymentLocation}/start.sh" // Assuming start.sh script exists for starting the LMS
             }
         }
