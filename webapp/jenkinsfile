@@ -1,3 +1,4 @@
+
 pipeline {
     agent any
 
@@ -84,26 +85,25 @@ pipeline {
         }
 
         stage('Deploy LMS') {
-    when {
-        expression {
-            currentBuild.result != 'FAILURE'
-        }
-    }
-    steps {
-        script {
-            echo "Deploying LMS..."
-            
-            // Define artifact file path
-            def artifactFile = "${downloadDirectory}/artifact.zip"
-            
-            // Ensure deployment location exists
-            sh "mkdir -p ${deploymentLocation}"
-            
-            // Check if the artifact file exists before unzipping
-            sh "if [ -f ${artifactFile} ]; then unzip -o ${artifactFile} -d ${deploymentLocation}; else echo 'Artifact file does not exist'; fi" || error("Failed to unzip artifact or artifact file does not exist")
+            when {
+                expression {
+                    currentBuild.result != 'FAILURE'
+                }
+            }
+            steps {
+                script {
+                    echo "Deploying LMS..."
+                    
+                    // Define artifact file path
+                    def artifactFile = "${downloadDirectory}/artifact.zip"
+                    
+                    // Ensure deployment location exists
+                    sh "mkdir -p ${deploymentLocation}"
+                    
+                    // Check if the artifact file exists before unzipping
+                    sh "if [ -f ${artifactFile} ]; then unzip -o ${artifactFile} -d ${deploymentLocation}; else echo 'Artifact file does not exist'; fi" || error("Failed to unzip artifact or artifact file does not exist")
+                }
+            }
         }
     }
 }
-
-       
-                    
