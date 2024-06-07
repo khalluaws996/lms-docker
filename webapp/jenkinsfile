@@ -23,7 +23,8 @@ pipeline {
                     
                     // Create a zip file of the dist directory
                     def zipFileName = "webapp/dist-${packageJSONVersion}.zip"
-                    sh "zip -r ${zipFileName} webapp/dist/*"
+                    sh "zip -r webapp/dist-0.0.0.zip webapp/dist/*"
+
                     
                     // Upload the zip file to the repository
                     def curlCommand = "curl -v -u admin:admin123 --upload-file ${zipFileName} ${repositoryURL}${zipFileName}"
