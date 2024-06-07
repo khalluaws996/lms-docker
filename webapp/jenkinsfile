@@ -69,13 +69,25 @@ pipeline {
             }
         }
         
+         environment {
+        repositoryURL = "http://54.172.190.173:8081/repository/lms/"
+        downloadDirectory = "/tmp" // Specify a different directory for artifact download
+    }
+
+    stages {
         stage('Download Artifact') {
             steps {
                 echo "Downloading artifact..."
-                sh "mkdir -p /home/ubuntu/tmp"
-                sh "curl -v -u admin:admin123 -o /home/ubuntu/tmp/dist.zip http://54.172.190.173:8081/repository/lms/webapp/dist-${packageJSONVersion}.zip"
+                
+                // Download the artifact
+                sh "mkdir -p ${downloadDirectory}" // Create the download directory if it doesn't exist
+                sh "curl -o ${downloadDirectory}/artifact.zip ${repositoryURL}/artifact.zip"
             }
         }
+        
+        // Other stages...
+    }
+}
 
         stage('Deploy Artifact') {
             steps {
