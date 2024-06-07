@@ -1,4 +1,3 @@
-
 pipeline {
     agent any
 
@@ -85,6 +84,11 @@ pipeline {
         }
         
        stage('Deploy LMS') {
+            when {
+                expression {
+                    currentBuild.result != 'FAILURE'
+                }
+            }
             steps {
                 script {
                     echo "Deploying LMS..."
