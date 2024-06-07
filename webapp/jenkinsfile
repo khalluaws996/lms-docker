@@ -75,19 +75,14 @@ pipeline {
         stage('Deploy LMS') {
             steps {
                 echo 'Deploying LMS...'
-                try {
-                    sh "unzip ${downloadDirectory}/artifact.zip -d ${deploymentLocation}"
-                    sh "${deploymentLocation}/start.sh"
-                } catch (Exception e) {
-                    echo "Deployment failed: ${e}"
-                    currentBuild.result = 'FAILURE'
-                }
-            }
-        }
-    }
-    post {
-        always {
-            cleanWs()
-        }
-    }
-}
+                script {
+                    try {
+                        sh 'unzip /tmp/artifact.zip -d /opt/lms'
+                        sh '/opt/lms/start.sh'
+                   } catch (Exception e) {
+                       echo "Deployment failed: ${e}"
+                       currentBuild.result = 'FAILURE'
+                   }
+               }
+           }
+       }
