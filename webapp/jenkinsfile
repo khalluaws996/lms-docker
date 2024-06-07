@@ -1,3 +1,4 @@
+
 pipeline {
     agent any
 
@@ -58,6 +59,7 @@ pipeline {
                             success = true
                         } catch (Exception e) {
                             echo "Upload attempt ${retryCount + 1} failed. Retrying..."
+                            echo "Error: ${e}"
                             retryCount++
                             sleep(time: 10, unit: 'SECONDS') // Wait before retrying
                         }
@@ -78,23 +80,25 @@ pipeline {
                 sh "mkdir -p ${downloadDirectory}"
                 
                 // Download the artifact
-                sh "curl -o ${downloadDirectory}/artifact.zip ${repositoryURL}/artifact.zip"
+                sh "curl -o ${downloadDirectory}/artifact.zip ${repositoryURL}/artifact.zip" || error("Failed to download the artifact")
             }
         }
         
        stage('Deploy LMS') {
-    steps {
-        script {
-            echo "Deploying LMS..."
-            
-            // Define artifact file path
-            def artifactFile = "${downloadDirectory}/artifact.zip"
-            
-            // Ensure deployment location exists
-            sh "mkdir -p ${deploymentLocation}"
-            
-            // Check if the artifact file exists before unzipping
-            sh "if [ -f ${artifactFile} ]; then unzip -o ${artifactFile} -d ${deploymentLocation}; else echo 'Artifact file does not exist'; fi"
+            steps {
+                script {
+                    echo "Deploying LMS..."
+                    
+                    // Define artifact file path
+                    def artifactFile = "${downloadDirectory}/artifact.zip"
+                    
+                    // Ensure deployment location exists
+                    sh "mkdir -p ${deploymentLocation}"
+                    
+                    // Check if the artifact file exists before unzipping
+                    sh "if [ -f ${artifactFile} ]; then unzip -o ${artifactFile} -d ${deploymentLocation}; else echo 'Artifact file does not exist'; fi" || error("Failed to unzip artifact or artifact file does not exist")
+                }
+            }
         }
     }
 }
