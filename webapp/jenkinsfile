@@ -4,6 +4,7 @@ pipeline {
     environment {
         repositoryURL = "http://54.172.190.173:8081/repository/lms/"
         downloadDirectory = "/tmp" // Specify a different directory for artifact download
+        deploymentLocation = "/home/ubuntu/lms" // Specify the deployment location
     }
 
     stages {
@@ -82,25 +83,18 @@ pipeline {
         }
         
         stage('Deploy LMS') {
-    steps {
-        echo "Deploying LMS..."
-        
-        // Define artifact file path
-        def artifactFile = "${downloadDirectory}/artifact.zip"
-        
-        // Ensure deployment location exists
-        sh "mkdir -p /path/to/deployment/location"
-        
-        // Download artifact using wget
-        sh "wget -O ${artifactFile} ${repositoryURL}/artifact.zip"
-        
-        // Check if the artifact file exists before unzipping
-        if (fileExists(artifactFile)) {
-            // Unzip artifact to deployment location
-            sh "unzip -o ${artifactFile} -d /path/to/deployment/location"
-        } else {
-            error "Failed to download artifact or artifact file does not exist"
+            steps {
+                echo "Deploying LMS..."
+                
+                // Define artifact file path
+                def artifactFile = "${downloadDirectory}/artifact.zip"
+                
+                // Ensure deployment location exists
+                sh "mkdir -p ${deploymentLocation}"
+                
+                // Check if the artifact file exists before unzipping
+                sh "if [ -f ${artifactFile} ]; then unzip -o ${artifactFile} -d ${deploymentLocation}; else echo 'Artifact file does not exist'; fi"
+            }
         }
     }
 }
-
