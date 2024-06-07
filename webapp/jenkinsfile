@@ -82,19 +82,19 @@ pipeline {
             }
         }
         
-        stage('Deploy LMS') {
-            steps {
-                echo "Deploying LMS..."
-                
-                // Define artifact file path
-                def artifactFile = "${downloadDirectory}/artifact.zip"
-                
-                // Ensure deployment location exists
-                sh "mkdir -p ${deploymentLocation}"
-                
-                // Check if the artifact file exists before unzipping
-                sh "if [ -f ${artifactFile} ]; then unzip -o ${artifactFile} -d ${deploymentLocation}; else echo 'Artifact file does not exist'; fi"
-            }
+       stage('Deploy LMS') {
+    steps {
+        script {
+            echo "Deploying LMS..."
+            
+            // Define artifact file path
+            def artifactFile = "${downloadDirectory}/artifact.zip"
+            
+            // Ensure deployment location exists
+            sh "mkdir -p ${deploymentLocation}"
+            
+            // Check if the artifact file exists before unzipping
+            sh "if [ -f ${artifactFile} ]; then unzip -o ${artifactFile} -d ${deploymentLocation}; else echo 'Artifact file does not exist'; fi"
         }
     }
 }
