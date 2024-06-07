@@ -2,9 +2,9 @@ pipeline {
     agent any
 
     environment {
-        repositoryURL = "http://54.172.190.173:8081/repository/lms/"
-        downloadDirectory = "/tmp" // Specify a different directory for artifact download
-        deploymentLocation = "/home/ubuntu/lms" // Specify the deployment location
+        artifactURL = "http://54.172.190.173:8081/artifact.zip"
+        downloadDirectory = "/tmp"
+        deploymentDirectory = "/opt/lms"
     }
 
     stages {
@@ -14,77 +14,18 @@ pipeline {
             }
         }
         
-        stage('Checkout Code') {
-            steps {
-                checkout scm
-            }
-        }
-
-        stage('Build LMS') {
-            steps {
-                echo 'Building LMS...'
-                sh '''
-                   cd webapp
-                   npm install
-                   npm run build
-                '''
-            }
-        }
-
-        stage('Publish Artifacts') {
-            steps {
-                script {
-                    echo "Publishing artifacts"
-                    
-                    // Read the version from package.json
-                    def packageJSON = readJSON file: 'webapp/package.json'
-                    def packageJSONVersion = packageJSON.version 
-                    
-                    // Create a zip file of the dist directory
-                    def zipFileName = "webapp/dist-${packageJSONVersion}.zip"
-                    sh "zip -r ${zipFileName} webapp/dist/*"
-                    
-                    // Upload the zip file to the repository
-                    def curlCommand = "curl -v -u admin:admin123 --upload-file ${zipFileName} ${repositoryURL}${zipFileName}"
-                    
-                    // Retry mechanism
-                    def maxRetries = 6
-                    def retryCount = 0
-                    def success = false
-
-                    while (retryCount < maxRetries && !success) {
-                        try {
-                            sh curlCommand
-                            success = true
-                        } catch (Exception e) {
-                            echo "Upload attempt ${retryCount + 1} failed. Retrying..."
-                            echo "Error: ${e}"
-                            retryCount++
-                            sleep(time: 10, unit: 'SECONDS') // Wait before retrying
-                        }
-                    }
-
-                    if (!success) {
-                        error("Failed to upload the artifact after ${maxRetries} attempts")
-                    }
-                }
-            }
-        }
-
         stage('Download Artifact') {
             steps {
                 echo 'Downloading artifact...'
-                // Replace http://http://54.172.190.173:8081 with the actual URL or IP address where your artifact is located
-                sh 'wget http://54.172.190.173:8081/artifact.zip -P /tmp'
+                sh "wget ${env.artifactURL} -P ${env.downloadDirectory}"
             }
         }
         
         stage('Deploy LMS') {
             steps {
                 echo 'Deploying LMS...'
-                // Replace the deployment steps with the actual commands needed to deploy your LMS
-                sh 'unzip /tmp/artifact.zip -d /opt/lms'
-                sh '/opt/lms/start.sh'
+                sh "unzip ${env.downloadDirectory}/artifact.zip -d ${env.deploymentDirectory}"
+                sh "${env.deploymentDirectory}/start.sh"
             }
         }
     }
