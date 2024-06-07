@@ -3,8 +3,8 @@ pipeline {
 
     environment {
         repositoryURL = "http://54.172.190.173:8081/repository/lms/"
-        downloadDirectory = "/tmp" // Specify a different directory for artifact download
-        deploymentLocation = "/home/ubuntu/lms" // Specify the deployment location
+        downloadDirectory = "/tmp"
+        deploymentLocation = "/home/ubuntu/lms"
     }
 
     stages {
@@ -47,6 +47,10 @@ pipeline {
                     def zipFileName = "dist-${packageJSONVersion}.zip"
                     sh "cd webapp && zip -r ${zipFileName} dist/*"
 
+                    // Log the contents and size of the zip file
+                    sh "ls -l webapp/${zipFileName}"
+                    sh "unzip -l webapp/${zipFileName}"
+
                     // Upload the zip file to the repository
                     withCredentials([usernamePassword(credentialsId: 'repo-credentials', passwordVariable: 'REPO_PASSWORD', usernameVariable: 'REPO_USERNAME')]) {
                         def curlCommand = "curl -v -u ${REPO_USERNAME}:${REPO_PASSWORD} --upload-file webapp/${zipFileName} ${repositoryURL}${zipFileName}"
@@ -83,6 +87,8 @@ pipeline {
                     withCredentials([usernamePassword(credentialsId: 'repo-credentials', passwordVariable: 'REPO_PASSWORD', usernameVariable: 'REPO_USERNAME')]) {
                         try {
                             sh "wget --user=${REPO_USERNAME} --password=${REPO_PASSWORD} ${repositoryURL}dist-${env.PACKAGE_VERSION}.zip -P ${downloadDirectory}"
+                            sh "ls -l ${downloadDirectory}/dist-${env.PACKAGE_VERSION}.zip"
+                            sh "unzip -l ${downloadDirectory}/dist-${env.PACKAGE_VERSION}.zip"
                         } catch (Exception e) {
                             echo "Download failed: ${e.getMessage()}"
                             error("Artifact download failed")
@@ -97,10 +103,6 @@ pipeline {
                 echo 'Deploying LMS...'
                 script {
                     try {
-                        // Add debug information to check file existence and permissions
-                        sh "ls -l ${downloadDirectory}/dist-${env.PACKAGE_VERSION}.zip"
-                        sh "unzip -l ${downloadDirectory}/dist-${env.PACKAGE_VERSION}.zip"
-
                         // Ensure the deployment directory exists
                         sh "mkdir -p ${deploymentLocation}"
 
