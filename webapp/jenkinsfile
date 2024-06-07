@@ -41,11 +41,11 @@ pipeline {
                     def packageJSONVersion = packageJSON.version 
                     
                     // Create a zip file of the dist directory
-                    def zipFileName = "webapp/dist-${packageJSONVersion}.zip"
-                    sh "zip -r ${zipFileName} webapp/dist/*"
+                    def zipFileName = "dist-${packageJSONVersion}.zip"
+                    sh "cd webapp && zip -r ${zipFileName} dist/*"
                     
                     // Upload the zip file to the repository
-                    def curlCommand = "curl -v -u admin:admin123 --upload-file ${zipFileName} ${repositoryURL}${zipFileName}"
+                    def curlCommand = "curl -v -u admin:admin123 --upload-file webapp/${zipFileName} ${repositoryURL}${zipFileName}"
                     
                     // Retry mechanism
                     def maxRetries = 6
@@ -58,7 +58,7 @@ pipeline {
                             success = true
                         } catch (Exception e) {
                             echo "Upload attempt ${retryCount + 1} failed. Retrying..."
-                            echo "Error: ${e}"
+                            echo "Error: ${e.getMessage()}"
                             retryCount++
                             sleep(time: 10, unit: 'SECONDS') // Wait before retrying
                         }
@@ -74,7 +74,14 @@ pipeline {
         stage('Download Artifact') {
             steps {
                 echo 'Downloading artifact...'
-                sh "wget ${repositoryURL}artifact.zip -P ${downloadDirectory}"
+                script {
+                    try {
+                        sh "wget ${repositoryURL}dist-${packageJSONVersion}.zip -P ${downloadDirectory}"
+                    } catch (Exception e) {
+                        echo "Download failed: ${e.getMessage()}"
+                        error("Artifact download failed")
+                    }
+                }
             }
         }
         
@@ -83,10 +90,10 @@ pipeline {
                 echo 'Deploying LMS...'
                 script {
                     try {
-                        sh "unzip ${downloadDirectory}/artifact.zip -d ${deploymentLocation}"
+                        sh "unzip ${downloadDirectory}/dist-${packageJSONVersion}.zip -d ${deploymentLocation}"
                         sh "${deploymentLocation}/start.sh"
                     } catch (Exception e) {
-                        echo "Deployment failed: ${e}"
+                        echo "Deployment failed: ${e.getMessage()}"
                         currentBuild.result = 'FAILURE'
                     }
                 }
