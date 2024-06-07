@@ -68,6 +68,34 @@ pipeline {
                 }
             }
         }
+        
+        stage('Download Artifact') {
+            steps {
+                script {
+                    echo "Downloading artifact..."
+                    
+                    def artifactVersion = sh(script: "curl -s ${repositoryURL}latest_version.txt", returnStdout: true).trim()
+                    def artifactUrl = "${repositoryURL}webapp/dist-${artifactVersion}.zip"
+                    def artifactDestination = "/tmp/dist-${artifactVersion}.zip"
+                    
+                    sh "curl -o ${artifactDestination} ${artifactUrl}"
+                    
+                    echo "Artifact downloaded successfully."
+                }
+            }
+        }
+        
+        stage('Deploy Artifact') {
+            steps {
+                script {
+                    echo "Deploying artifact..."
+                    
+                    // Assuming deployment tool is Ansible
+                    sh "ansible-playbook deploy.yml --extra-vars 'artifact_path=${artifactDestination}'"
+                    
+                    echo "Artifact deployed successfully."
+                }
+            }
+        }
     }
 }
-
