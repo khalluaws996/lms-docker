@@ -5,6 +5,10 @@ pipeline {
         nodejs 'NodeJS_Latest'
     }
 
+    environment {
+        repositoryURL = "http://54.172.190.173:8081/repository/lms/"
+    }
+
     stages {
         stage('Cleanup Workspace') {
             steps {
@@ -43,7 +47,6 @@ pipeline {
                     sh "zip -r ${zipFileName} webapp/dist/*"
                     
                     // Upload the zip file to the repository
-                    def repositoryURL = "http://54.172.190.173:8081/repository/lms/"
                     def curlCommand = "curl -v -u admin:admin123 --upload-file ${zipFileName} ${repositoryURL}${zipFileName}"
                     
                     // Retry mechanism
@@ -74,8 +77,8 @@ pipeline {
                 script {
                     echo "Downloading artifact..."
                     
-                    def artifactVersion = sh(script: "curl -s ${repositoryURL}latest_version.txt", returnStdout: true).trim()
-                    def artifactUrl = "${repositoryURL}webapp/dist-${artifactVersion}.zip"
+                    def artifactVersion = sh(script: "curl -s ${env.repositoryURL}latest_version.txt", returnStdout: true).trim()
+                    def artifactUrl = "${env.repositoryURL}webapp/dist-${artifactVersion}.zip"
                     def artifactDestination = "/tmp/dist-${artifactVersion}.zip"
                     
                     sh "curl -o ${artifactDestination} ${artifactUrl}"
