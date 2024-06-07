@@ -7,32 +7,12 @@ pipeline {
 
     environment {
         repositoryURL = "http://54.172.190.173:8081/repository/lms/"
+        artifactDestination = "/tmp/dist-${packageJSONVersion}.zip"
     }
 
     stages {
-        stage('Cleanup Workspace') {
-            steps {
-                deleteDir()
-            }
-        }
+        // Previous stages...
         
-        stage('Checkout Code') {
-            steps {
-                checkout scm
-            }
-        }
-
-        stage('Build LMS') {
-            steps {
-                echo 'Building LMS...'
-                sh '''
-                   cd webapp
-                   npm install
-                   npm run build
-                '''
-            }
-        }
-
         stage('Publish Artifacts') {
             steps {
                 script {
@@ -44,7 +24,10 @@ pipeline {
                     
                     // Create a zip file of the dist directory
                     def zipFileName = "webapp/dist-${packageJSONVersion}.zip"
-                    sh "zip -r ${zipFileName} webapp/dist/*"
+                    sh "cd webapp/dist && zip -r ../../${zipFileName} *"
+                    
+                    // Assign the artifact destination
+                    env.artifactDestination = "/tmp/${zipFileName}"
                     
                     // Upload the zip file to the repository
                     def curlCommand = "curl -v -u admin:admin123 --upload-file ${zipFileName} ${repositoryURL}${zipFileName}"
@@ -72,29 +55,13 @@ pipeline {
             }
         }
         
-        stage('Download Artifact') {
-            steps {
-                script {
-                    echo "Downloading artifact..."
-                    
-                    def artifactVersion = sh(script: "curl -s ${env.repositoryURL}latest_version.txt", returnStdout: true).trim()
-                    def artifactUrl = "${env.repositoryURL}webapp/dist-${artifactVersion}.zip"
-                    def artifactDestination = "/tmp/dist-${artifactVersion}.zip"
-                    
-                    sh "curl -o ${artifactDestination} ${artifactUrl}"
-                    
-                    echo "Artifact downloaded successfully."
-                }
-            }
-        }
-        
         stage('Deploy Artifact') {
             steps {
                 script {
                     echo "Deploying artifact..."
                     
                     // Assuming deployment tool is Ansible
-                    sh "ansible-playbook deploy.yml --extra-vars 'artifact_path=${artifactDestination}'"
+                    sh "ansible-playbook deploy.yml --extra-vars 'artifact_path=${env.artifactDestination}'"
                     
                     echo "Artifact deployed successfully."
                 }
