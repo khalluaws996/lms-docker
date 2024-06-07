@@ -3,9 +3,9 @@ pipeline {
 
     environment {
         repositoryURL = "http://54.172.190.173:8081/repository/lms/"
-        artifactFileName = "dist-0.0.0.zip" // Update with the correct artifact filename
-        downloadDirectory = "/tmp"
-        deploymentLocation = "/opt/lms" // Update with the deployment location
+        downloadDirectory = "/tmp" // Specify a different directory for artifact download
+        deploymentLocation = "/home/ubuntu/lms" // Specify the deployment location
+        artifactFileName = "your-artifact-file.zip" // Specify the name of the artifact file
     }
 
     stages {
@@ -14,7 +14,7 @@ pipeline {
                 deleteDir()
             }
         }
-
+        
         stage('Checkout Code') {
             steps {
                 checkout scm
@@ -25,9 +25,9 @@ pipeline {
             steps {
                 echo 'Building LMS...'
                 sh '''
-                    cd webapp
-                    npm install
-                    npm run build
+                   cd webapp
+                   npm install
+                   npm run build
                 '''
             }
         }
@@ -36,18 +36,37 @@ pipeline {
             steps {
                 script {
                     echo "Publishing artifacts"
-
+                    
                     // Read the version from package.json
                     def packageJSON = readJSON file: 'webapp/package.json'
-                    def packageJSONVersion = packageJSON.version
-
+                    def packageJSONVersion = packageJSON.version 
+                    
                     // Create a zip file of the dist directory
-                    def zipFileName = "dist-${packageJSONVersion}.zip"
+                    def zipFileName = "webapp/dist-${packageJSONVersion}.zip"
                     sh "zip -r ${zipFileName} webapp/dist/*"
-
+                    
                     // Upload the zip file to the repository
-                    withCredentials([usernamePassword(credentialsId: 'repo-credentials', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                        sh "curl -v -u ${USERNAME}:${PASSWORD} --upload-file ${zipFileName} ${repositoryURL}${zipFileName}"
+                    def curlCommand = "curl -v -u admin:admin123 --upload-file ${zipFileName} ${repositoryURL}${zipFileName}"
+                    
+                    // Retry mechanism
+                    def maxRetries = 6
+                    def retryCount = 0
+                    def success = false
+
+                    while (retryCount < maxRetries && !success) {
+                        try {
+                            sh curlCommand
+                            success = true
+                        } catch (Exception e) {
+                            echo "Upload attempt ${retryCount + 1} failed. Retrying..."
+                            echo "Error: ${e}"
+                            retryCount++
+                            sleep(time: 10, unit: 'SECONDS') // Wait before retrying
+                        }
+                    }
+
+                    if (!success) {
+                        error("Failed to upload the artifact after ${maxRetries} attempts")
                     }
                 }
             }
@@ -56,12 +75,10 @@ pipeline {
         stage('Download Artifact') {
             steps {
                 echo 'Downloading artifact...'
-                withCredentials([usernamePassword(credentialsId: 'repo-credentials', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                    sh "wget --user=${USERNAME} --password=${PASSWORD} ${repositoryURL}${artifactFileName} -P ${downloadDirectory}"
-                }
+                sh "wget -O ${downloadDirectory}/${artifactFileName} ${repositoryURL}/${artifactFileName}"
             }
         }
-
+        
         stage('Deploy LMS') {
             steps {
                 echo 'Deploying LMS...'
@@ -71,9 +88,10 @@ pipeline {
             }
         }
     }
-
+    
     post {
         always {
+            // Clean up any temporary files or resources if needed
             cleanWs()
         }
     }
