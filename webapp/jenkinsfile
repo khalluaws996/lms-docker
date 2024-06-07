@@ -71,38 +71,27 @@ pipeline {
             }
         }
         
+       stages {
         stage('Download Artifact') {
             steps {
-                echo "Downloading artifact..."
-                
-                // Create the download directory if it doesn't exist
-                sh "mkdir -p ${downloadDirectory}"
-                
-                // Download the artifact
-                sh "curl -o ${downloadDirectory}/artifact.zip ${repositoryURL}/artifact.zip" || error("Failed to download the artifact")
+                echo 'Downloading artifact...'
+                // Replace http://http://54.172.190.173:8081 with the actual URL or IP address where your artifact is located
+                sh 'wget http://54.172.190.173:8081/artifact.zip -P /tmp'
             }
         }
-
         stage('Deploy LMS') {
-            when {
-                expression {
-                    currentBuild.result != 'FAILURE'
-                }
-            }
             steps {
-                script {
-                    echo "Deploying LMS..."
-                    
-                    // Define artifact file path
-                    def artifactFile = "${downloadDirectory}/artifact.zip"
-                    
-                    // Ensure deployment location exists
-                    sh "mkdir -p ${deploymentLocation}"
-                    
-                    // Check if the artifact file exists before unzipping
-                    sh "if [ -f ${artifactFile} ]; then unzip -o ${artifactFile} -d ${deploymentLocation}; else echo 'Artifact file does not exist'; fi" || error("Failed to unzip artifact or artifact file does not exist")
-                }
+                echo 'Deploying LMS...'
+                // Replace the deployment steps with the actual commands needed to deploy your LMS
+                sh 'unzip /tmp/artifact.zip -d /opt/lms'
+                sh '/opt/lms/start.sh'
             }
+        }
+    }
+    post {
+        always {
+            // Clean up any temporary files or resources if needed
+            cleanWs()
         }
     }
 }
