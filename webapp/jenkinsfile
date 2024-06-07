@@ -4,7 +4,7 @@ pipeline {
     tools {
         nodejs 'NodeJS_Latest'
     }
-    
+
     environment {
         repositoryURL = "http://54.172.190.173:8081/repository/lms/"
         downloadDirectory = "/tmp" // Specify a different directory for artifact download
@@ -72,23 +72,24 @@ pipeline {
                 }
             }
         }
-
+        
         stage('Download Artifact') {
             steps {
                 echo "Downloading artifact..."
                 
                 // Download the artifact
                 sh "mkdir -p ${downloadDirectory}" // Create the download directory if it doesn't exist
-                sh "curl -o ${downloadDirectory}/dist-0.0.0.zip ${repositoryURL}/artifact.zip"
+                sh "curl -o ${downloadDirectory}/artifact.zip ${repositoryURL}/artifact.zip"
             }
         }
-
-        stage('Deploy Artifact') {
+        
+        stage('Deploy LMS') {
             steps {
-                echo "Deploying artifact..."
-                sh "unzip ${downloadDirectory}/dist-0.0.0.zip -d ${downloadDirectory}"
+                echo "Deploying LMS..."
+                // Add your deployment commands here
+                // For example, if you need to unzip the downloaded artifact:
+                sh "unzip ${downloadDirectory}/artifact.zip -d /path/to/deployment/location"
             }
         }
     }
 }
-
