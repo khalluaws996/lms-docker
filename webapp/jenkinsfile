@@ -6,6 +6,7 @@ pipeline {
         downloadDirectory = "/tmp" // Specify a different directory for artifact download
         deploymentLocation = "/home/ubuntu/lms" // Specify the deployment location
         artifactFileName = "your-artifact-file.zip" // Specify the name of the artifact file
+        credentialsId = 'repo-credentials' // Specify the ID of the Jenkins credentials containing the username and password
     }
 
     stages {
@@ -75,7 +76,9 @@ pipeline {
         stage('Download Artifact') {
             steps {
                 echo 'Downloading artifact...'
-                sh "wget -O ${downloadDirectory}/${artifactFileName} ${repositoryURL}/${artifactFileName}"
+                withCredentials([usernamePassword(credentialsId: credentialsId, usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                    sh "wget --user=${USERNAME} --password=${PASSWORD} -O ${downloadDirectory}/${artifactFileName} ${repositoryURL}/${artifactFileName}"
+                }
             }
         }
         
