@@ -86,10 +86,15 @@ pipeline {
         stage('Deploy LMS') {
             steps {
                 echo 'Deploying LMS...'
-                // Unzip the artifact and start the deployment
-                catchError(buildResult: 'FAILURE') {
-                    sh "unzip ${downloadDirectory}/${artifactFileName} -d ${deploymentLocation}"
-                    sh "${deploymentLocation}/start.sh"
+                // Check if the artifact file exists before extracting
+                script {
+                    def artifactFilePath = "${downloadDirectory}/${artifactFileName}"
+                    if (fileExists(artifactFilePath)) {
+                        sh "unzip ${artifactFilePath} -d ${deploymentLocation}"
+                        sh "${deploymentLocation}/start.sh"
+                    } else {
+                        error("Artifact file '${artifactFilePath}' not found.")
+                    }
                 }
             }
         }
