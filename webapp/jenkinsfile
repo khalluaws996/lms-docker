@@ -70,8 +70,7 @@ pipeline {
                 }
             }
         }
-        
-       stages {
+
         stage('Download Artifact') {
             steps {
                 echo 'Downloading artifact...'
@@ -79,6 +78,7 @@ pipeline {
                 sh 'wget http://54.172.190.173:8081/artifact.zip -P /tmp'
             }
         }
+        
         stage('Deploy LMS') {
             steps {
                 echo 'Deploying LMS...'
@@ -88,6 +88,7 @@ pipeline {
             }
         }
     }
+    
     post {
         always {
             // Clean up any temporary files or resources if needed
