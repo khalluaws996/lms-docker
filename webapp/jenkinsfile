@@ -83,8 +83,14 @@ pipeline {
             steps {
                 echo 'Deploying LMS...'
                 // Replace the deployment steps with the actual commands needed to deploy your LMS
-                sh 'unzip /tmp/artifact.zip -d /opt/lms'
-                sh '/opt/lms/start.sh'
+                script {
+                    try {
+                        sh 'unzip /tmp/artifact.zip -d /opt/lms'
+                        sh '/opt/lms/start.sh'
+                    } catch (Exception e) {
+                        error("Deployment failed: ${e}")
+                    }
+                }
             }
         }
     }
@@ -95,4 +101,3 @@ pipeline {
         }
     }
 }
-
