@@ -1,8 +1,9 @@
+
 pipeline {
     agent any
 
     tools {
-        nodejs 'NodeJS_Latest' 
+        nodejs 'NodeJS_Latest'
     }
 
     stages {
@@ -18,9 +19,9 @@ pipeline {
             }
         }
 
-        stage('Build Lms') {
+        stage('Build LMS') {
             steps {
-                echo 'Lms Build'
+                echo 'Building LMS...'
                 sh '''
                    cd webapp
                    npm install
@@ -38,23 +39,13 @@ pipeline {
                     def packageJSON = readJSON file: 'webapp/package.json'
                     def packageJSONVersion = packageJSON.version 
                     
-                    // Debugging steps to check the contents and availability of commands
-                    sh 'ls -l webapp/dist' 
-                    sh 'which zip' 
-                    
                     // Create a zip file of the dist directory
                     def zipFileName = "webapp/dist-${packageJSONVersion}.zip"
                     sh "zip -r ${zipFileName} webapp/dist/*"
                     
-                    // Debugging step to print the zip file name
-                    echo "Zip file name: ${zipFileName}"
-                    
                     // Upload the zip file to the repository
-                    def repositoryURL = "http://http://54.172.190.173//repository/lms/"
-                    def curlCommand = "curl -v -u admin:admin123 --upload-file ${zipFileName} ${repositoryURL}"
-                    
-                    // Debugging step to print the full curl command
-                    echo "Executing command: ${curlCommand}"
+                    def repositoryURL = "http://54.172.190.173/repository/lms/"
+                    def curlCommand = "curl -v -u admin:admin123 --upload-file ${zipFileName} ${repositoryURL}${zipFileName}"
                     
                     // Retry mechanism
                     def maxRetries = 6
