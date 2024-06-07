@@ -82,12 +82,25 @@ pipeline {
         }
         
         stage('Deploy LMS') {
-            steps {
-                echo "Deploying LMS..."
-                // Add your deployment commands here
-                // For example, if you need to unzip the downloaded artifact:
-                sh "unzip ${downloadDirectory}/artifact.zip -d /path/to/deployment/location"
-            }
+    steps {
+        echo "Deploying LMS..."
+        
+        // Define artifact file path
+        def artifactFile = "${downloadDirectory}/artifact.zip"
+        
+        // Ensure deployment location exists
+        sh "mkdir -p /path/to/deployment/location"
+        
+        // Download artifact using wget
+        sh "wget -O ${artifactFile} ${repositoryURL}/artifact.zip"
+        
+        // Check if the artifact file exists before unzipping
+        if (fileExists(artifactFile)) {
+            // Unzip artifact to deployment location
+            sh "unzip -o ${artifactFile} -d /path/to/deployment/location"
+        } else {
+            error "Failed to download artifact or artifact file does not exist"
         }
     }
 }
+
