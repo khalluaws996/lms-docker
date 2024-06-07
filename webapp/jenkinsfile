@@ -3,8 +3,8 @@ pipeline {
 
     environment {
         repositoryURL = "http://54.172.190.173:8081/repository/lms/"
-        downloadDirectory = "/tmp"
-        deploymentLocation = "/home/ubuntu/lms"
+        downloadDirectory = "/tmp" // Specify a different directory for artifact download
+        deploymentLocation = "/home/ubuntu/lms" // Specify the deployment location
     }
 
     stages {
@@ -13,7 +13,7 @@ pipeline {
                 deleteDir()
             }
         }
-
+        
         stage('Checkout Code') {
             steps {
                 checkout scm
@@ -35,46 +35,37 @@ pipeline {
             steps {
                 script {
                     echo "Publishing artifacts"
-
+                    
                     // Read the version from package.json
                     def packageJSON = readJSON file: 'webapp/package.json'
-                    def packageJSONVersion = packageJSON.version
-
-                    // Set an environment variable with the version number
-                    env.PACKAGE_VERSION = packageJSONVersion
-
+                    def packageJSONVersion = packageJSON.version 
+                    
                     // Create a zip file of the dist directory
-                    def zipFileName = "dist-${packageJSONVersion}.zip"
-                    sh "cd webapp && zip -r ${zipFileName} dist/*"
-
-                    // Log the contents and size of the zip file
-                    sh "ls -l webapp/${zipFileName}"
-                    sh "unzip -l webapp/${zipFileName}"
-
+                    def zipFileName = "webapp/dist-${packageJSONVersion}.zip"
+                    sh "zip -r ${zipFileName} webapp/dist/*"
+                    
                     // Upload the zip file to the repository
-                    withCredentials([usernamePassword(credentialsId: 'repo-credentials', passwordVariable: 'REPO_PASSWORD', usernameVariable: 'REPO_USERNAME')]) {
-                        def curlCommand = "curl -v -u ${REPO_USERNAME}:${REPO_PASSWORD} --upload-file webapp/${zipFileName} ${repositoryURL}${zipFileName}"
+                    def curlCommand = "curl -v -u admin:admin123 --upload-file ${zipFileName} ${repositoryURL}${zipFileName}"
+                    
+                    // Retry mechanism
+                    def maxRetries = 3
+                    def retryCount = 0
+                    def success = false
 
-                        // Retry mechanism
-                        def maxRetries = 6
-                        def retryCount = 0
-                        def success = false
-
-                        while (retryCount < maxRetries && !success) {
-                            try {
-                                sh curlCommand
-                                success = true
-                            } catch (Exception e) {
-                                echo "Upload attempt ${retryCount + 1} failed. Retrying..."
-                                echo "Error: ${e.getMessage()}"
-                                retryCount++
-                                sleep(time: 10, unit: 'SECONDS') // Wait before retrying
-                            }
+                    while (retryCount < maxRetries && !success) {
+                        try {
+                            sh curlCommand
+                            success = true
+                        } catch (Exception e) {
+                            echo "Upload attempt ${retryCount + 1} failed. Retrying..."
+                            echo "Error: ${e}"
+                            retryCount++
+                            sleep(time: 10, unit: 'SECONDS') // Wait before retrying
                         }
+                    }
 
-                        if (!success) {
-                            error("Failed to upload the artifact after ${maxRetries} attempts")
-                        }
+                    if (!success) {
+                        error("Failed to upload the artifact after ${maxRetries} attempts")
                     }
                 }
             }
@@ -83,42 +74,28 @@ pipeline {
         stage('Download Artifact') {
             steps {
                 echo 'Downloading artifact...'
-                script {
-                    withCredentials([usernamePassword(credentialsId: 'repo-credentials', passwordVariable: 'REPO_PASSWORD', usernameVariable: 'REPO_USERNAME')]) {
-                        try {
-                            sh "wget --user=${REPO_USERNAME} --password=${REPO_PASSWORD} ${repositoryURL}dist-${env.PACKAGE_VERSION}.zip -P ${downloadDirectory}"
-                            sh "ls -l ${downloadDirectory}/dist-${env.PACKAGE_VERSION}.zip"
-                            sh "unzip -l ${downloadDirectory}/dist-${env.PACKAGE_VERSION}.zip"
-                        } catch (Exception e) {
-                            echo "Download failed: ${e.getMessage()}"
-                            error("Artifact download failed")
-                        }
-                    }
-                }
+                // Replace http://http://54.172.190.173:8081 with the actual URL or IP address where your artifact is located
+                sh 'wget http://54.172.190.173:8081/artifact.zip -P /tmp || true'
             }
         }
-
+        
         stage('Deploy LMS') {
             steps {
                 echo 'Deploying LMS...'
                 script {
                     try {
-                        // Ensure the deployment directory exists
-                        sh "mkdir -p ${deploymentLocation}"
-
-                        // Unzip the artifact and start the LMS application
-                        sh "unzip ${downloadDirectory}/dist-${env.PACKAGE_VERSION}.zip -d ${deploymentLocation}"
-                        sh "chmod +x ${deploymentLocation}/start.sh"
-                        sh "${deploymentLocation}/start.sh"
+                        sh 'ls -l /tmp/dist-*.zip'
+                        sh 'unzip -l /tmp/dist-*.zip'
+                        sh 'unzip /tmp/dist-*.zip -d /opt/lms'
+                        sh '/opt/lms/start.sh'
                     } catch (Exception e) {
-                        echo "Deployment failed: ${e.getMessage()}"
-                        error("Deployment failed: ${e.getMessage()}")
+                        echo "Deployment failed: ${e}"
+                        currentBuild.result = 'FAILURE'
                     }
                 }
             }
         }
     }
-
     post {
         always {
             // Clean up any temporary files or resources if needed
